@@ -1,0 +1,4 @@
+[lnmp]
+name=lnmp
+gpgcheck=0
+baseurl=file:///root/lnmp-repo

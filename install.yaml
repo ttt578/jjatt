@@ -1,0 +1,42 @@
+---
+- hosts: all
+  remote_user: root
+  tasks:
+  - shell: setenforce 0 ; systemctl disable --now  firewalld ; rm -rf /etc/yum.repos.d/*
+    ignore_errors: ture
+  - unarchive: 
+      src: yum.tar.gz
+      dest: /
+  - yum: 
+      name: 
+        - nginx
+        - mariadb-server
+        - php
+        - php-fpm
+        - php-mysql
+      state: present
+  - service: 
+      name: mariadb
+      state: started
+      enabled: true
+  - unarchive:
+      src: wordpress-5.0.2-zh_CN.tar.gz
+      dest: /usr/share/nginx/html/
+  - copy: 
+      src: www.conf
+      dest: /etc/php-fpm.d/www.conf
+  - copy:
+      src: default.conf
+      dest: /etc/nginx/conf.d/default.conf
+  - copy:
+      src: wp-config.php
+      dest: /usr/share/nginx/html/wordpress/wp-config.php
+  - shell: mysqladmin -uroot password 123456
+    ignore_errors: true
+  - shell: mysql -uroot -p123456 -e "create database wordpress;grant all on wordpress.* to 'root'@'localhost' identified by '123456';flush privileges;"
+    ignore_errors: true
+  - copy: 
+      src: wordpress.sql
+      dest: /root 
+  - shell: mysql -uroot -p123456 wordpress < wordpress.sql
+  - shell: systemctl enable --now php-fpm nginx
